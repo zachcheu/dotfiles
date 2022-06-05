@@ -3,13 +3,13 @@ prod_zones="dca20 dca1 dca11 dca4 dca8 icn99 las99 phx2 phx3 phx4 phx5 phx99 ALL
 alias bhd="bazel run //src/code.uber.internal/infra/bhd/cmd/cli --"
 
 plugins=(git docker docker-compose zsh-z zsh-syntax-highlighting)
-ZSH_THEME="crcandy"
 #ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#9BC7FF"
 source $ZSH/oh-my-zsh.sh
 DISABLE_UPDATE_PROMPT=true
 
 export EDITOR=nvim
 
+alias ssh="ssh -X"
 alias hc="hostctl console -if"
 alias nv="nvim -n" 
 alias ad="arc diff HEAD^"
@@ -29,6 +29,8 @@ alias zl='lzc host list -z $1 "${@:2}"'
 alias sshdev='ssh zachcheung.devpod-us-or'
 alias infra='cd ~/go-code/src/code.uber.internal/infra/'
 alias nf='nv $(fzf)'
+alias tmux='TERM=xterm-256color tmux'
+alias histo='sort | uniq -c'
 
 alias tmc="nc -q 5000 localhost 2224"
 alias fmc="nc localhost 2225"
@@ -128,21 +130,6 @@ bindkey -v
  # Remove mode switching delay.
 KEYTIMEOUT=5
 
-# Change cursor shape for different vi modes.
-#function zle-keymap-select {
-#  if [[ ${KEYMAP} == vicmd ]] ||
-#     [[ $1 = 'block' ]]; then
-#    echo -ne '\e[2 q'
-#
-#  elif [[ ${KEYMAP} == main ]] ||
-#       [[ ${KEYMAP} == viins ]] ||
-#       [[ ${KEYMAP} = '' ]] ||
-#       [[ $1 = 'beam' ]]; then
-#    echo -ne '\e[6 q'
-#  fi
-#}
-#zle -N zle-keymap-select
-
 # Use beam shape cursor on startup.
 # echo -ne '\e[6 q'
 
@@ -152,6 +139,20 @@ _fix_cursor() {
 }
 
 precmd_functions+=(_fix_cursor)
+
+function zle-keymap-select {
+      if [[ ${KEYMAP} == vicmd ]] ||
+         [[ $1 = 'block' ]]; then
+        echo -ne '\e[2 q'
+
+      elif [[ ${KEYMAP} == main ]] ||
+           [[ ${KEYMAP} == viins ]] ||
+           [[ ${KEYMAP} = '' ]] ||
+           [[ $1 = 'beam' ]]; then
+        echo -ne '\e[6 q'
+      fi
+    }
+    zle -N zle-keymap-select
 
 bindkey "^[[A" history-beginning-search-backward
 bindkey "^[[B" history-beginning-search-forward
@@ -173,5 +174,21 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
-
+PATH=$PATH:~/local/nvim/bin/
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+ZSH_THEME=""
+# Load version control information
+autoload -Uz vcs_info
+precmd() { vcs_info }
+
+# Format the vcs_info_msg_0_ variable
+zstyle ':vcs_info:git:*' formats '[%b]'
+ 
+# Set up the prompt (with git branch name)
+setopt PROMPT_SUBST
+NEWLINE=$'\n'
+
+PROMPT='%F{yellow}%*%f:%F{cyan}%~%f %F{magenta}${vcs_info_msg_0_}$f${NEWLINE}%F{gray}> '
+
+unset GOROOT
