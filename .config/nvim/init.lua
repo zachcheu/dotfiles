@@ -51,7 +51,7 @@ require('packer').startup(function(use)
   use 'junegunn/fzf.vim'
   use 'junegunn/fzf'
   use 'airblade/vim-rooter'
-  use 'haishanh/night-owl.vim'
+  use { "catppuccin/nvim", as = "catppuccin" }
   use 'lewis6991/gitsigns.nvim'
   use 'nanozuki/tabby.nvim'
 
@@ -125,7 +125,7 @@ require('gitsigns').setup{
 }
  
 -------------------- OPTIONS -------------------------------
-cmd 'colorscheme night-owl'
+cmd 'colorscheme catppuccin-latte'
 cmd 'syntax enable'
 opt.cursorline = true               -- Highlight line of cursor
 opt.expandtab = true                -- Use spaces instead of tabs
