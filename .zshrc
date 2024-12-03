@@ -2,7 +2,7 @@ export ZSH=$HOME/.oh-my-zsh
 prod_zones="dca20 dca1 dca11 dca4 dca8 icn99 las99 phx2 phx3 phx4 phx5 phx99 ALL_ZONES"
 alias bhd="bazel run //src/code.uber.internal/infra/bhd/cmd/cli --"
 
-plugins=(git docker docker-compose zsh-z zsh-syntax-highlighting)
+plugins=(git docker docker-compose zsh-z)
 #ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#9BC7FF"
 source $ZSH/oh-my-zsh.sh
 DISABLE_UPDATE_PROMPT=true
