@@ -10,9 +10,7 @@ DISABLE_UPDATE_PROMPT=true
 export EDITOR=nvim
 
 alias ssh="ssh -X"
-alias hc="hostctl console -if"
 alias nv="nvim -n" 
-alias ad="arc diff HEAD^"
 alias rel="source ~/.zshrc"
 alias gs="git status ."
 alias gprom="git pull --rebase origin main"
@@ -23,17 +21,12 @@ alias gcm="git commit -m"
 alias gr="git rebase"
 alias gre="git rebase --edit-todo"
 alias grc="git rebase --continue"
+alias ls="ls -a"
 alias grl="git reflog"
-alias his="hostissue"
-alias zl='lzc host list -z $1 "${@:2}"'
-alias sshdev='ssh zachcheung.devpod-us-or'
-alias infra='cd ~/go-code/src/code.uber.internal/infra/'
 alias nf='nv $(fzf)'
 alias tmux='TERM=xterm-256color tmux'
 alias histo='sort | uniq -c'
 
-alias tmc="nc -q 5000 localhost 2224"
-alias fmc="nc localhost 2225"
 vtmc(){
   cat ~/.vitemp | tmc
 }
@@ -44,11 +37,6 @@ echo $id
 echo $id | pbcopy
 }
 
-lhs(){
-lzc host show --format='{{.Hostname}} {{.UUID}} {{.Group}} {{.ProviderType}} {{.ServerType}}
-{{.Manufacturer}} {{.Layout}} {{.Type}} {{.Interfaces.Primary.IPv4}} {{.Interfaces.Primary.MAC}}
-{{.Interfaces.BMC.IPv4}}' $@ | sed 's/ *$//g' | awk '{ gsub(" ", "\n", $0); print}'
-}
 unalias gdt
 gdt(){
 d=${1:-1}
@@ -123,8 +111,6 @@ export VAULT_ADDR="https://ess.uberinternal.com"
 
 HIST_STAMPS="mm/dd/yyyy"
 
-echo -e "`date +"%Y-%m-%d %H:%M:%S"` direnv hooking zsh" > /dev/null
-eval "$(direnv hook zsh)" > /dev/null
 bindkey -v
 
  # Remove mode switching delay.
@@ -157,16 +143,8 @@ function zle-keymap-select {
 bindkey "^[[A" history-beginning-search-backward
 bindkey "^[[B" history-beginning-search-forward
 bindkey '^R' history-incremental-search-backward
-export MONOREPO_GOPATH_MODE=1 # This is optional. Without it, GOPATH mode will be off by default
-export GO111MODULE="off"
-source $HOME/gopathmodeFunc.bash
 export FZF_DEFAULT_COMMAND='rg --files --no-ignore-vcs --hidden'
 
-# The next line updates PATH for the Google Cloud SDK.
-if [ -f '/usr/local/bin/google-cloud-sdk/path.zsh.inc' ]; then . '/usr/local/bin/google-cloud-sdk/path.zsh.inc'; fi
-
-# The next line enables shell command completion for gcloud.
-if [ -f '/usr/local/bin/google-cloud-sdk/completion.zsh.inc' ]; then . '/usr/local/bin/google-cloud-sdk/completion.zsh.inc'; fi
 HISTTIMEFORMAT="%d/%m/%y %T "
 HISTTIMEFORMAT="%F %T "
 
