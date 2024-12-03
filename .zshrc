@@ -24,7 +24,7 @@ alias grc="git rebase --continue"
 alias ls="ls -a"
 alias grl="git reflog"
 alias nf='nv $(fzf)'
-alias tmux='TERM=xterm-256color tmux'
+alias tmux='TERM=screen-256color tmux'
 alias histo='sort | uniq -c'
 
 vtmc(){
