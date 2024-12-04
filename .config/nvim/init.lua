@@ -72,7 +72,7 @@ require('lualine').setup({
       "buffers",
       buffers_color = {
         active = { bg = '#d8aeff', fg = '#262626' },
-        inactive = { bg = '#262626', fg = '#121212' },
+        inactive = { bg = '#366585', fg = '#121212' },
       }
     }
   },

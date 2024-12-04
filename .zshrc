@@ -24,8 +24,9 @@ alias grc="git rebase --continue"
 alias ls="ls -a"
 alias grl="git reflog"
 alias nf='nv $(fzf)'
-alias tmux='TERM=xterm-kitty tmux'
+alias tmux='TERM=xterm-256color tmux'
 alias histo='sort | uniq -c'
+TERM='xterm-256color'
 
 vtmc(){
   cat ~/.vitemp | tmc
@@ -117,7 +118,7 @@ bindkey -v
 KEYTIMEOUT=5
 
 # Use beam shape cursor on startup.
-# echo -ne '\e[6 q'
+echo -ne '\e[6 q'
 
 # Use beam shape cursor for each new prompt.
 _fix_cursor() {
