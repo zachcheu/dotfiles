@@ -1,5 +1,5 @@
 -------------------- HELPERS -------------------------------
- local cmd = vim.cmd  -- to execute Vim commands e.g. cmd('pwd')
+local cmd = vim.cmd  -- to execute Vim commands e.g. cmd('pwd')
 local api = vim.api
 local fn = vim.fn    -- to call Vim functions e.g. fn.bufnr()
 local g = vim.g      -- a table to access global variables
@@ -39,7 +39,7 @@ map('n', '<leader><C-f>', ':lua fzf_repo()<CR>')
 
 vim.cmd [[packadd packer.nvim]]
 -------------------- PLUGINS -------------------------------
-require('packer').startup(function(use)
+require('packer').startup({function(use)
   use 'wbthomason/packer.nvim'
   use 'neovim/nvim-lspconfig'
   use 'hrsh7th/nvim-cmp'
@@ -61,12 +61,56 @@ require('packer').startup(function(use)
   }
   use {'echasnovski/mini.diff'}
   use {'nvim-focus/focus.nvim'}
-end)
+  use {'nvim-treesitter/nvim-treesitter',run = ':TSUpdate'}
+  use {"nvim-treesitter/nvim-treesitter-textobjects"}
+end,
+config = {
+  display = {
+    open_fn = require('packer.util').float,
+  }
+}})
 
 -- Plugin Settings
 g['fzf_layout'] = {down = '~40%'}
 g['go_doc_keywordprg_enabled'] = 0
 g['updatetime'] = 300
+require'nvim-treesitter.configs'.setup {
+  ensure_installed = { "c", "lua", "vim", "vimdoc", "query", "markdown", "markdown_inline", "go"},
+  sync_install = false,
+  auto_install = true,
+  ignore_install = { "javascript" },
+  highlight = {
+    enable = true,
+  },
+  incremental_selection = {
+    enable = true,
+    keymaps = {
+      init_selection = "<leader>ss",
+      node_incremental = "<leader>sk",
+      scope_incremental = "<leader>sc",
+      node_decremental = "<leader>sj",
+    },
+  },
+  textobjects = {
+    select = {
+      enable = true,
+      lookahead = true,
+      keymaps = {
+        ["af"] = "@function.outer",
+        ["if"] = "@function.inner",
+        ["ac"] = "@class.outer",
+        ["ic"] = "@class.inner",
+        ["as"] = "@local.scope"
+      },
+      selection_modes = {
+        ['@parameter.outer'] = 'v',
+        ['@function.outer'] = 'v',
+        ['@class.outer'] = 'V',
+      },
+      include_surrounding_whitespace = true,
+    },
+  },
+}
 require("focus").setup()
 require('nvim-autopairs').setup{}
 require('lualine').setup({
@@ -130,7 +174,7 @@ map('i', '<Tab>', 'pumvisible() ? "\\<C-n>" : "\\<Tab>"', {expr = true})
 map('n', '<leader>o', 'm`o<Esc>``')  -- Insert a newline in normal mode
 map('n', 'n', 'nzz')                 -- Better search centering
 map('n', 'N', 'Nzz')
-map('n', '<C-j>', 'A<del>')
+map('n', '<C-j>', 'A<del><Esc>')
 map('n', '*', '*zz')
 map('n', '#', '#zz')
 map('n', 'K', ':m .-2<CR>==')
@@ -183,7 +227,7 @@ map('n', '<leader>ff', ':FzfLua quickfix<CR>')
 map('n', '<leader>fe', ':lua MiniFiles.open()<CR>')
 --fugitive
 map('n', '<leader>hs', ':Git difftool -y<CR>')
-map('n', '<leader>hc', ':tabfirst | :.tabonly<CR>')
+map('n', '<leader>hh', ':tabfirst | :.tabonly<CR>')
 
 function table_contains(table, element)
   for i,val in ipairs(table) do

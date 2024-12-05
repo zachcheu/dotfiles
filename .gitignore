@@ -1,1 +1,4 @@
 .config/nvim/plugin/*
+.config/JetBrains/*
+.config/configstore/*
+.config/go/*
