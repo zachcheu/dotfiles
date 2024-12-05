@@ -5,6 +5,7 @@ rm -rf ~/.config ~/.tmux.conf ~/.zshrc
 ln -s "$script_dir".config ~/.config
 ln -s "$script_dir".tmux.conf ~/.tmux.conf
 ln -s "$script_dir".zshrc ~/.zshrc
+ln -s "$script_dir".wezterm.lua ~/.wezterm.lua
 
 #NVIM Setup
 git clone --depth 1 https://github.com/wbthomason/packer.nvim ~/.local/share/nvim/site/pack/packer/start/packer.nvim || true

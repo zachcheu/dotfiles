@@ -1,5 +1,5 @@
 -------------------- HELPERS -------------------------------
-local cmd = vim.cmd  -- to execute Vim commands e.g. cmd('pwd')
+ local cmd = vim.cmd  -- to execute Vim commands e.g. cmd('pwd')
 local api = vim.api
 local fn = vim.fn    -- to call Vim functions e.g. fn.bufnr()
 local g = vim.g      -- a table to access global variables
@@ -8,12 +8,14 @@ local shlist = vim.fn.systemlist
 local sh = vim.fn.system
 
 vim.o.runtimepath = vim.fn.stdpath('data') .. '/site/pack/*/start/*,' .. vim.o.runtimepath
-vim.g.mapleader = " "
 local function map(mode, lhs, rhs, opts)
   local options = {noremap = true}
   if opts then options = vim.tbl_extend('force', options, opts) end
   vim.api.nvim_set_keymap(mode, lhs, rhs, options)
 end
+
+g['mapleader'] = " "
+map('n', '<leader>', '<Nop>')
 
 function nvim_create_augroups(definitions)
 for group_name, definition in pairs(definitions) do
@@ -44,85 +46,52 @@ require('packer').startup(function(use)
   use 'hrsh7th/cmp-nvim-lsp'
   use 'hrsh7th/cmp-buffer' 
   use "windwp/nvim-autopairs" 
-  use 'tpope/vim-eunuch'
   use 'tpope/vim-abolish'
   use 'tpope/vim-fugitive'
-  use 'tmux-plugins/vim-tmux-focus-events'
-  use 'junegunn/fzf.vim'
-  use 'junegunn/fzf'
-  use 'airblade/vim-rooter'
   use { "catppuccin/nvim", as = "catppuccin" }
-  use 'lewis6991/gitsigns.nvim'
   use 'nanozuki/tabby.nvim'
-
   use {'nvim-lualine/lualine.nvim', requires = { 'nvim-tree/nvim-web-devicons', opt = true }}
+  use {'ibhagwan/fzf-lua', requires = { "nvim:-tree/nvim-web-devicons" }}
+  use { 'echasnovski/mini.files' }
+  use {
+    "nvim-zh/colorful-winsep.nvim",
+    config = function ()
+        require('colorful-winsep').setup()
+    end
+  }
+  use {'echasnovski/mini.diff'}
+  use {'nvim-focus/focus.nvim'}
 end)
 
 -- Plugin Settings
-g['rooter_targets'] = '/,*'
-g['rooter_cd_cmd'] = 'lcd'
 g['fzf_layout'] = {down = '~40%'}
 g['go_doc_keywordprg_enabled'] = 0
-g['updatetime'] = 100
+g['updatetime'] = 300
+require("focus").setup()
 require('nvim-autopairs').setup{}
 require('lualine').setup({
- sections = {
-  lualine_c = {
-    { 
-      "buffers",
-      buffers_color = {
-        active = { bg = '#d8aeff', fg = '#262626' },
-        inactive = { bg = '#366585', fg = '#121212' },
-      }
-    }
+  sections = {
+    lualine_c = {'filename'},
   },
- },
 })
-require('gitsigns').setup{
-  on_attach = function(bufnr)
-    local gitsigns = require('gitsigns')
-
-    local function map(mode, l, r, opts)
-      opts = opts or {}
-      opts.buffer = bufnr
-      vim.keymap.set(mode, l, r, opts)
-    end
-
-    -- Navigation
-    map('n', '<leader>gj', function()
-      if vim.wo.diff then
-        vim.cmd.normal({']c', bang = true})
-      else
-        gitsigns.nav_hunk('next')
-      end
-    end)
-    
-    map('n', '<leader>gk', function()
-      if vim.wo.diff then
-        vim.cmd.normal({'[c', bang = true})
-      else
-        gitsigns.nav_hunk('prev')
-      end
-    end)
-    
-    -- Actions
-    map('n', '<leader>hs', gitsigns.stage_hunk)
-    map('n', '<leader>hr', gitsigns.reset_hunk)
-    map('n', '<leader>hx', function() gitsigns.stage_hunk {vim.fn.line('.'), vim.fn.line('v')}  gitsigns.reset_hunk {vim.fn.line('.'), vim.fn.line('v')} end)
-    map('v', '<leader>hs', function() gitsigns.stage_hunk {vim.fn.line('.'), vim.fn.line('v')} end)
-    map('v', '<leader>hr', function() gitsigns.reset_hunk {vim.fn.line('.'), vim.fn.line('v')} end)
-    map('n', '<leader>hS', gitsigns.stage_buffer)
-    map('n', '<leader>hu', gitsigns.undo_stage_hunk)
-    map('n', '<leader>hp', gitsigns.preview_hunk_inline)
-    map('n', '<leader>hb', function() gitsigns.blame_line{full=true} end)
-    map('n', '<leader>tb', gitsigns.toggle_current_line_blame)
-    map('n', '<leader>hd', gitsigns.diffthis)
-    map('n', '<leader>td', gitsigns.toggle_deleted)
-
-    -- Text object
-    map({'o', 'x'}, 'ih', ':<C-U>Gitsigns select_hunk<CR>')
-  end
-}
+require('mini.files').setup({
+  mappings = {close = "<esc>"}
+})
+require('mini.diff').setup({
+  mappings = {
+    -- Apply hunks inside a visual/operator region
+    apply = '<leader>ha',
+    -- Reset hunks inside a visual/operator region
+    reset = '<leader>hr',
+    -- Hunk range textobject to be used inside operator
+    -- Works also in Visual mode if mapping differs from apply and reset
+    textobject = '<leader>hh',
+    -- Go to hunk range in corresponding direction
+    goto_prev = '<leader>hp',
+    goto_next = '<leader>hn',
+  }
+})
+require("fzf-lua").setup()
  
 -------------------- OPTIONS -------------------------------
 cmd 'colorscheme catppuccin-latte'
@@ -149,6 +118,9 @@ opt.termguicolors = true            -- True color support
 opt.wildmode = {'list', 'longest'}  -- Command-line completion mode
 opt.wrap = false                    -- Disable line wrap
 opt.virtualedit = 'insert'
+opt.mouse = ""
+opt.mousescroll = "ver:0,hor:0"
+
 cmd 'autocmd FocusLost,BufLeave * :wa'
 -------------------- MAPPINGS ------------------------------
 -- <Tab> to navigate the completion menu
@@ -158,6 +130,7 @@ map('i', '<Tab>', 'pumvisible() ? "\\<C-n>" : "\\<Tab>"', {expr = true})
 map('n', '<leader>o', 'm`o<Esc>``')  -- Insert a newline in normal mode
 map('n', 'n', 'nzz')                 -- Better search centering
 map('n', 'N', 'Nzz')
+map('n', '<C-j>', 'A<del>')
 map('n', '*', '*zz')
 map('n', '#', '#zz')
 map('n', 'K', ':m .-2<CR>==')
@@ -181,17 +154,63 @@ map('v', '<leader>p', '"+p')
 map('v', '<leader>P', '"+P')
 
 -- Buffer/Window/Tab Management
-map("n", "<C-j>", ":bprev<enter>", {noremap=false})
-map("n", "<C-k>", ":bnext<enter>", {noremap=false})
-map("n", "<C-h>", ":bfirst<enter>", {noremap=false})
-map("n", "<C-l>", ":blast<enter>", {noremap=false})
-map("n", "<leader><C-d>", ":bdelete<enter>", {noremap=false})
+map("n", "<leader>wk", ":bprev<CR>", {noremap=false})
+map("n", "<leader>wj", ":bnext<CR>", {noremap=false})
+map("n", "<leader>wh", ":tabprev<CR>", {noremap=false})
+map("n", "<leader>wl", ":tabnext<CR>", {noremap=false})
+map("n", "<leader>wt", ":tabclose<CR>", {noremap=false})
+map("n", "<leader>wb", ":bdelete<CR>", {noremap=false})
+map("n", "<leader>w<left>", "<C-w>h", {noremap=false})
+map("n", "<leader>w<down>", "<C-w>j", {noremap=false})
+map("n", "<leader>w<up>", "<C-w>k", {noremap=false})
+map("n", "<leader>w<right>", "<C-w>l", {noremap=false})
+map("n", "<leader>ws", "<C-w>s", {noremap=false})
+map("n", "<leader>wv", "<C-w>v", {noremap=false})
+map("n", "<leader>ww", "<C-w>c", {noremap=false})
+map("n", "<leader>wo", "<C-w><C-o>", {noremap=false})
 
+-- Config Management
+map("n", "<leader>co", ":e ~/.config/nvim/init.lua<CR>")
+map("n", "<leader>cr", ":w | :so ~/.config/nvim/init.lua<CR>")
 
--- Plugins Mappings
-map('n', '<C-f>', ':FZF<CR>')
-map('n', '<C-g>', ':Rg<CR>')
-map('v', '<C-y>', ':OSCYank<CR>')
+-- FzfLua
+map('n', '<leader>fb', ':FzfLua buffers<CR>')
+map('n', '<leader>fh', ':FzfLua oldfiles<CR>')
+map('n', '<leader>fo', ':lua require("fzf-lua").files({cwd=get_root(), git_icons=false})<CR>')
+map('n', '<leader>/', ':FzfLua lgrep_curbuf resume=true<CR>')
+map('n', '<leader>ff', ':FzfLua quickfix<CR>')
+--mini.files
+map('n', '<leader>fe', ':lua MiniFiles.open()<CR>')
+--fugitive
+map('n', '<leader>hs', ':Git difftool -y<CR>')
+map('n', '<leader>hc', ':tabfirst | :.tabonly<CR>')
+
+function table_contains(table, element)
+  for i,val in ipairs(table) do
+    if val == element then
+      return true
+    end
+  end
+  return false
+end
+
+function get_root()
+  local root_names = {'infra','base','config'}
+  local path = vim.api.nvim_buf_get_name(0)
+  if path == '' then return end
+  local root_dir = ""
+  for dir in vim.fs.parents(path) do
+    if vim.fn.isdirectory(dir .. "/.git") == 1 then
+      root_dir = dir
+      break
+    end
+    if table_contains(root_names, vim.fn.fnamemodify(dir, ':t')) then
+      root_dir = dir
+      break
+    end
+  end
+  return root_dir
+end
 
 -------------------- COMMANDS ------------------------------
 cmd 'au TextYankPost * lua vim.highlight.on_yank {on_visual = false}'  -- disabled in visual mode
