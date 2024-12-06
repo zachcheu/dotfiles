@@ -3,4 +3,6 @@ local config = wezterm.config_builder()
 config.colors = {
   background = 'white',
 }
+config['audible_bell'] = 'Disabled'
+
 return config
