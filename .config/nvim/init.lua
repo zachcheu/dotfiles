@@ -8,10 +8,12 @@ local shlist = vim.fn.systemlist
 local sh = vim.fn.system
 
 vim.o.runtimepath = vim.fn.stdpath('data') .. '/site/pack/*/start/*,' .. vim.o.runtimepath
+vim.env.PATH = vim.env.VIM_PATH or vim.env.PATH
+
 local function map(mode, lhs, rhs, opts)
   local options = {noremap = true}
   if opts then options = vim.tbl_extend('force', options, opts) end
-  vim.api.nvim_set_keymap(mode, lhs, rhs, options)
+  vim.keymap.set(mode, lhs, rhs, options)
 end
 
 g['mapleader'] = " "
@@ -41,10 +43,7 @@ vim.cmd [[packadd packer.nvim]]
 -------------------- PLUGINS -------------------------------
 require('packer').startup({function(use)
   use 'wbthomason/packer.nvim'
-  use 'neovim/nvim-lspconfig'
-  use 'hrsh7th/nvim-cmp'
-  use 'hrsh7th/cmp-nvim-lsp'
-  use 'hrsh7th/cmp-buffer' 
+  use {'neovim/nvim-lspconfig'}
   use "windwp/nvim-autopairs" 
   use 'tpope/vim-abolish'
   use 'tpope/vim-fugitive'
@@ -52,17 +51,27 @@ require('packer').startup({function(use)
   use 'nanozuki/tabby.nvim'
   use {'nvim-lualine/lualine.nvim', requires = { 'nvim-tree/nvim-web-devicons', opt = true }}
   use {'ibhagwan/fzf-lua', requires = { "nvim:-tree/nvim-web-devicons" }}
-  use { 'echasnovski/mini.files' }
   use {
     "nvim-zh/colorful-winsep.nvim",
     config = function ()
-        require('colorful-winsep').setup()
+      require('colorful-winsep').setup()
     end
   }
   use {'echasnovski/mini.diff'}
+  use {'echasnovski/mini.surround'}
   use {'nvim-focus/focus.nvim'}
   use {'nvim-treesitter/nvim-treesitter',run = ':TSUpdate'}
   use {"nvim-treesitter/nvim-treesitter-textobjects"}
+  use {'ms-jpq/coq_nvim'}
+  use {'ms-jpq/coq.artifacts'}
+  use {'ms-jpq/chadtree'}
+  use {'ray-x/lsp_signature.nvim'}
+  use {'nvim-lua/lsp-status.nvim'}
+  use {"vigoux/notifier.nvim",
+    config = function()
+      require('notifier').setup()
+    end
+  }
 end,
 config = {
   display = {
@@ -71,10 +80,26 @@ config = {
 }})
 
 -- Plugin Settings
-g['fzf_layout'] = {down = '~40%'}
 g['go_doc_keywordprg_enabled'] = 0
 g['updatetime'] = 300
-require'nvim-treesitter.configs'.setup {
+g['coq_settings'] = {auto_= true}
+g['chadtree_settings'] = {
+  keymap = {
+    quit = {"`"},
+    change_dir = {"b"},
+    change_focus = {"<right>"},
+    change_focus_up = {"<left>"},
+    primary = {"<cr>", "l"},
+    v_split = {"v"},
+    h_split = {"V"},
+    collapse = {"h"},
+  },
+}
+require("lsp_signature").setup({
+  hint_enable = false,
+  fix_pos = true,
+})
+require('nvim-treesitter.configs').setup({
   ensure_installed = { "c", "lua", "vim", "vimdoc", "query", "markdown", "markdown_inline", "go"},
   sync_install = false,
   auto_install = true,
@@ -110,16 +135,28 @@ require'nvim-treesitter.configs'.setup {
       include_surrounding_whitespace = true,
     },
   },
-}
+})
 require("focus").setup()
+local ignore_buftypes = { 'nofile', 'prompt', 'popup' }
+local augroup = vim.api.nvim_create_augroup('FocusDisable', { clear = true })
+vim.api.nvim_create_autocmd({'WinEnter', 'WinLeave'}, {
+    group = augroup,
+    callback = function(_)
+        if vim.tbl_contains(ignore_buftypes, vim.bo.buftype)
+        then
+            vim.w.focus_disable = true
+        else
+            vim.w.focus_disable = false
+        end
+    end,
+    desc = 'Disable focus autoresize for BufType',
+})
+
 require('nvim-autopairs').setup{}
 require('lualine').setup({
   sections = {
     lualine_c = {'filename'},
   },
-})
-require('mini.files').setup({
-  mappings = {close = "<esc>"}
 })
 require('mini.diff').setup({
   mappings = {
@@ -167,10 +204,6 @@ opt.mousescroll = "ver:0,hor:0"
 
 cmd 'autocmd FocusLost,BufLeave * :wa'
 -------------------- MAPPINGS ------------------------------
--- <Tab> to navigate the completion menu
-map('i', '<S-Tab>', 'pumvisible() ? "\\<C-p>" : "\\<Tab>"', {expr = true})
-map('i', '<Tab>', 'pumvisible() ? "\\<C-n>" : "\\<Tab>"', {expr = true})
-
 map('n', '<leader>o', 'm`o<Esc>``')  -- Insert a newline in normal mode
 map('n', 'n', 'nzz')                 -- Better search centering
 map('n', 'N', 'Nzz')
@@ -208,23 +241,33 @@ map("n", "<leader>w<left>", "<C-w>h", {noremap=false})
 map("n", "<leader>w<down>", "<C-w>j", {noremap=false})
 map("n", "<leader>w<up>", "<C-w>k", {noremap=false})
 map("n", "<leader>w<right>", "<C-w>l", {noremap=false})
-map("n", "<leader>ws", "<C-w>s", {noremap=false})
+map("n", "<leader>wV", "<C-w>s", {noremap=false})
 map("n", "<leader>wv", "<C-w>v", {noremap=false})
 map("n", "<leader>ww", "<C-w>c", {noremap=false})
 map("n", "<leader>wo", "<C-w><C-o>", {noremap=false})
 
 -- Config Management
 map("n", "<leader>co", ":e ~/.config/nvim/init.lua<CR>")
-map("n", "<leader>cr", ":w | :so ~/.config/nvim/init.lua<CR>")
 
 -- FzfLua
 map('n', '<leader>fb', ':FzfLua buffers<CR>')
 map('n', '<leader>fh', ':FzfLua oldfiles<CR>')
-map('n', '<leader>fo', ':lua require("fzf-lua").files({cwd=get_root(), git_icons=false})<CR>')
+map('n', '<leader>fo', ':lua require("fzf-lua").files({cwd=get_root(), git_icons=false, resume=true})<CR>')
+map('n', '<leader>fO', ':lua require("fzf-lua").files({cwd=get_root(), git_icons=false, resume=false})<CR>')
+map('n', '<leader>f/', ':FzfLua live_grep resume=true<CR>')
+map('n', '<leader>f?', ':FzfLua live_grep resume=false<CR>')
 map('n', '<leader>/', ':FzfLua lgrep_curbuf resume=true<CR>')
+map('n', '<leader>?', ':FzfLua lgrep_curbuf resume=false<CR>')
 map('n', '<leader>ff', ':FzfLua quickfix<CR>')
---mini.files
-map('n', '<leader>fe', ':lua MiniFiles.open()<CR>')
+--chadtree
+map('n', '<leader>fe', function() 
+  if vim.bo.buftype == "nofile" then 
+    return ":CHADopen<CR>"
+  else
+    return ":CHADopen --always-focus<CR>"
+  end
+  return
+end, {expr = true, silent = true})
 --fugitive
 map('n', '<leader>hs', ':Git difftool -y<CR>')
 map('n', '<leader>hh', ':tabfirst | :.tabonly<CR>')
@@ -258,3 +301,55 @@ end
 
 -------------------- COMMANDS ------------------------------
 cmd 'au TextYankPost * lua vim.highlight.on_yank {on_visual = false}'  -- disabled in visual mode
+
+-------------------- LSP ---------------------------
+local on_attach = function(client, bufnr)
+  local opts = { noremap=true, silent=true, buffer=bufnr }
+ 
+  -- Mappings.
+  -- See `:help vim.lsp.*` for documentation on any of the below functions
+  vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
+  vim.keymap.set('n', 'gh', vim.lsp.buf.hover, opts)
+  vim.keymap.set('n', '<space>rn', vim.lsp.buf.rename, opts)
+  vim.keymap.set('n', '<space>ca', vim.lsp.buf.code_action, opts)
+  vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
+ 
+  -- You can delete this if you enable format-on-save.
+  vim.keymap.set('n', '<space>f', function() vim.lsp.buf.format { async = true } end, opts)
+end
+ 
+require('lspconfig').gopls.setup({
+        cmd = {'gopls', '-remote=auto'},
+        on_attach = on_attach,
+        flags = {
+            -- Don't spam LSP with changes. Wait a second between each.
+            debounce_text_changes = 1000,
+        },
+})
+
+vim.g.coq_settings = {
+    keymap = {
+        recommended = false,
+    },
+}
+vim.keymap.set('i', '<Esc>', [[pumvisible() ? "\<C-e><Esc>" : "\<Esc>"]], { expr = true, silent = true })
+vim.keymap.set('i', '<C-c>', [[pumvisible() ? "\<C-e><C-c>" : "\<C-c>"]], { expr = true, silent = true })
+vim.keymap.set('i', '<BS>', [[pumvisible() ? "\<C-e><BS>" : "\<BS>"]], { expr = true, silent = true })
+vim.keymap.set(
+  "i",
+  "<CR>",
+  [[pumvisible() ? (complete_info().selected == -1 ? "\<C-e><CR>" : "\<C-y>") : "\<CR>"]],
+  { expr = true, silent = true }
+)
+ vim.keymap.set('i',
+  '<Tab>',
+  [[pumvisible() ? (complete_info().selected == -1 ? "\<C-n><C-y>" : "") : "\<Tab>"]],
+  { expr = true, silent = true }
+)
+
+vim.api.nvim_create_autocmd({"BufWritePre", "FocusLost"}, {
+    buffer = buffer,
+    callback = function()
+        vim.lsp.buf.format { async = false }
+    end
+})
