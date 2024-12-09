@@ -251,6 +251,7 @@ map('n', '<leader>fb', ':FzfLua buffers<CR>')
 map('n', '<leader>fh', ':FzfLua oldfiles<CR>')
 map('n', '<leader>fo', ':lua require("fzf-lua").files({cwd=get_root(), git_icons=false, resume=true})<CR>')
 map('n', '<leader>fO', ':lua require("fzf-lua").files({cwd=get_root(), git_icons=false, resume=false})<CR>')
+map('n', '<leader>fg', ':lua require("fzf-lua").grep()<CR>')
 map('n', '<leader>f/', ':FzfLua live_grep resume=true<CR>')
 map('n', '<leader>f?', ':FzfLua live_grep resume=false<CR>')
 map('n', '<leader>/', ':FzfLua lgrep_curbuf resume=true<CR>')
@@ -307,20 +308,34 @@ function get_root()
   return root_dir
 end
 
+function center_wrap_callback(argfunc)
+  return function()
+    argfunc()
+    vim.cmd.normal{'zz'}
+  end
+end
+
 -------------------- COMMANDS ------------------------------
 cmd 'au TextYankPost * lua vim.highlight.on_yank {on_visual = false}'  -- disabled in visual mode
 
 -------------------- LSP ---------------------------
 local on_attach = function(client, bufnr)
-  local opts = { noremap=true, silent=true, buffer=bufnr }
+  local opts = { noremap=true, silent=false, buffer=bufnr }
 
   -- Mappings.
   -- See `:help vim.lsp.*` for documentation on any of the below functions
-  vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
+  vim.keymap.set('n', 'gd', center_wrap_callback(vim.lsp.buf.definition), opts)
   vim.keymap.set('n', 'gh', vim.lsp.buf.hover, opts)
-  vim.keymap.set('n', '<space>rn', vim.lsp.buf.rename, opts)
+  vim.keymap.set('n', 'ge', vim.lsp.buf.rename, opts)
   vim.keymap.set('n', '<space>ca', vim.lsp.buf.code_action, opts)
   vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
+  local function quickfix()
+      vim.lsp.buf.code_action({
+          filter = function(a) return a.isPreferred end,
+          apply = true
+      })
+  end
+  vim.keymap.set('n', '<leader>gf', quickfix, opts)
 
   -- You can delete this if you enable format-on-save.
   vim.keymap.set('n', '<space>f', function() vim.lsp.buf.format { async = true } end, opts)
