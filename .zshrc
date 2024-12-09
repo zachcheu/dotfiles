@@ -161,6 +161,7 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 PATH=$PATH:~/local/nvim/bin/
+PATH=$PATH:~/go-code/bin/
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 ZSH_THEME=""
