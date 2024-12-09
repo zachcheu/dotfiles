@@ -17,6 +17,7 @@ alias gprom="git pull --rebase origin main"
 alias gcaa="git commit -a --amend"
 alias gcam="git commit -am"
 alias gca="git add .; git commit -m $1"
+alias gcb="git checkout -b zach.cheung/$1"
 alias gcm="git commit -m"
 alias gr="git rebase"
 alias gre="git rebase --edit-todo"
@@ -24,9 +25,9 @@ alias grc="git rebase --continue"
 alias ls="ls -a"
 alias grl="git reflog"
 alias nf='nv $(fzf)'
-alias tmux='TERM=xterm-256color tmux'
+alias tmux='TERM=tmux-256color tmux'
 alias histo='sort | uniq -c'
-TERM='xterm-256color'
+TERM='tmux-256color'
 
 vtmc(){
   cat ~/.vitemp | tmc
@@ -93,6 +94,12 @@ gdou(){
   done
 
   eval "nv $exist_files" 
+}
+
+unalias gco
+gco(){
+  branch=$(git branch --format "%(refname:short)" | fzf)
+  git checkout $branch
 }
 
 alias gl="git log --pretty=oneline --abbrev-commit"

@@ -19,18 +19,6 @@ end
 g['mapleader'] = " "
 map('n', '<leader>', '<Nop>')
 
-function nvim_create_augroups(definitions)
-for group_name, definition in pairs(definitions) do
-api.nvim_command('augroup '..group_name)
-api.nvim_command('autocmd!')
-for _, def in ipairs(definition) do
-local command = table.concat(vim.tbl_flatten{'autocmd', def}, ' ')
-api.nvim_command(command)
-end
-api.nvim_command('augroup END')
-end
-end
-
 function fzf_repo()
   local dir
   dir = sh("git rev-parse --show-toplevel")
@@ -57,7 +45,6 @@ require('packer').startup({function(use)
       require('colorful-winsep').setup()
     end
   }
-  use {'echasnovski/mini.diff'}
   use {'echasnovski/mini.surround'}
   use {'nvim-focus/focus.nvim'}
   use {'nvim-treesitter/nvim-treesitter',run = ':TSUpdate'}
@@ -72,6 +59,7 @@ require('packer').startup({function(use)
       require('notifier').setup()
     end
   }
+  use {'gelguy/wilder.nvim'}
 end,
 config = {
   display = {
@@ -82,7 +70,7 @@ config = {
 -- Plugin Settings
 g['go_doc_keywordprg_enabled'] = 0
 g['updatetime'] = 300
-g['coq_settings'] = {auto_= true}
+g['coq_settings'] = {auto_start = true}
 g['chadtree_settings'] = {
   keymap = {
     quit = {"`"},
@@ -95,6 +83,10 @@ g['chadtree_settings'] = {
     collapse = {"h"},
   },
 }
+require("coq")
+require("wilder").setup({
+  modes = {":", '/', '?'}
+})
 require("lsp_signature").setup({
   hint_enable = false,
   fix_pos = true,
@@ -139,17 +131,34 @@ require('nvim-treesitter.configs').setup({
 require("focus").setup()
 local ignore_buftypes = { 'nofile', 'prompt', 'popup' }
 local augroup = vim.api.nvim_create_augroup('FocusDisable', { clear = true })
-vim.api.nvim_create_autocmd({'WinEnter', 'WinLeave'}, {
+vim.api.nvim_create_autocmd({'WinEnter'}, {
     group = augroup,
     callback = function(_)
         if vim.tbl_contains(ignore_buftypes, vim.bo.buftype)
         then
             vim.w.focus_disable = true
         else
-            vim.w.focus_disable = false
+            local before = vim.w.focus_disable
+            vim.w.focus_disable = false or vim.w.focus_disable
         end
     end,
     desc = 'Disable focus autoresize for BufType',
+})
+vim.api.nvim_create_autocmd({'WinLeave'}, {
+    group = augroup,
+    callback = function(_)
+        if vim.tbl_contains(ignore_buftypes, vim.bo.buftype)
+        then
+            vim.w.focus_disable = true
+        end
+    end,
+    desc = 'Disable focus autoresize for BufType',
+})
+vim.api.nvim_create_autocmd("VimEnter", {
+	callback = function()
+    vim.w.focus_disable = true
+		vim.cmd(":CHADopen --nofocus")
+	end,
 })
 
 require('nvim-autopairs').setup{}
@@ -158,22 +167,8 @@ require('lualine').setup({
     lualine_c = {'filename'},
   },
 })
-require('mini.diff').setup({
-  mappings = {
-    -- Apply hunks inside a visual/operator region
-    apply = '<leader>ha',
-    -- Reset hunks inside a visual/operator region
-    reset = '<leader>hr',
-    -- Hunk range textobject to be used inside operator
-    -- Works also in Visual mode if mapping differs from apply and reset
-    textobject = '<leader>hh',
-    -- Go to hunk range in corresponding direction
-    goto_prev = '<leader>hp',
-    goto_next = '<leader>hn',
-  }
-})
-require("fzf-lua").setup()
- 
+require("fzf-lua").setup() 
+
 -------------------- OPTIONS -------------------------------
 cmd 'colorscheme catppuccin-latte'
 cmd 'syntax enable'
@@ -196,7 +191,9 @@ opt.splitbelow = true               -- Put new windows below current
 opt.splitright = true               -- Put new windows right of current
 opt.tabstop = 2                     -- Number of spaces tabs count for
 opt.termguicolors = true            -- True color support
-opt.wildmode = {'list', 'longest'}  -- Command-line completion mode
+opt.wildmode = {"list:longest","full"}  -- Command-line completion mode
+opt.wildmenu = true 
+opt.wildoptions = "pum"
 opt.wrap = false                    -- Disable line wrap
 opt.virtualedit = 'insert'
 opt.mouse = ""
@@ -260,14 +257,25 @@ map('n', '<leader>/', ':FzfLua lgrep_curbuf resume=true<CR>')
 map('n', '<leader>?', ':FzfLua lgrep_curbuf resume=false<CR>')
 map('n', '<leader>ff', ':FzfLua quickfix<CR>')
 --chadtree
+local fileExplorerPrevWindow
 map('n', '<leader>fe', function() 
-  if vim.bo.buftype == "nofile" then 
-    return ":CHADopen<CR>"
+  if vim.bo.buftype == "nofile" and fileExplorerPrevWindow ~= null then 
+    return ":lua vim.api.nvim_set_current_win("..fileExplorerPrevWindow..")<cr>"
   else
+    fileExplorerPrevWindow = vim.api.nvim_get_current_win()
     return ":CHADopen --always-focus<CR>"
   end
   return
 end, {expr = true, silent = true})
+map('n', '<leader>fe', function() 
+  if vim.bo.buftype == "nofile" and fileExplorerPrevWindow ~= null then 
+    return ":lua vim.api.nvim_set_current_win("..fileExplorerPrevWindow..")<cr>"
+  else
+    fileExplorerPrevWindow = vim.api.nvim_get_current_win()
+    return ":CHADopen --always-focus<CR>"
+  end
+end, {expr = true, silent = true})
+map('n', '<leader>fq', ":CHADopen --nofocus<cr>", {silent = true})
 --fugitive
 map('n', '<leader>hs', ':Git difftool -y<CR>')
 map('n', '<leader>hh', ':tabfirst | :.tabonly<CR>')
@@ -305,7 +313,7 @@ cmd 'au TextYankPost * lua vim.highlight.on_yank {on_visual = false}'  -- disabl
 -------------------- LSP ---------------------------
 local on_attach = function(client, bufnr)
   local opts = { noremap=true, silent=true, buffer=bufnr }
- 
+
   -- Mappings.
   -- See `:help vim.lsp.*` for documentation on any of the below functions
   vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
@@ -313,43 +321,43 @@ local on_attach = function(client, bufnr)
   vim.keymap.set('n', '<space>rn', vim.lsp.buf.rename, opts)
   vim.keymap.set('n', '<space>ca', vim.lsp.buf.code_action, opts)
   vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
- 
+
   -- You can delete this if you enable format-on-save.
   vim.keymap.set('n', '<space>f', function() vim.lsp.buf.format { async = true } end, opts)
 end
- 
+
 require('lspconfig').gopls.setup({
-        cmd = {'gopls', '-remote=auto'},
-        on_attach = on_attach,
-        flags = {
-            -- Don't spam LSP with changes. Wait a second between each.
-            debounce_text_changes = 1000,
-        },
+  cmd = {'gopls', '-remote=auto'},
+  on_attach = on_attach,
+  flags = {
+    -- Don't spam LSP with changes. Wait a second between each.
+    debounce_text_changes = 1000,
+  },
 })
 
 vim.g.coq_settings = {
-    keymap = {
-        recommended = false,
-    },
+  keymap = {
+    recommended = false,
+  },
 }
 vim.keymap.set('i', '<Esc>', [[pumvisible() ? "\<C-e><Esc>" : "\<Esc>"]], { expr = true, silent = true })
 vim.keymap.set('i', '<C-c>', [[pumvisible() ? "\<C-e><C-c>" : "\<C-c>"]], { expr = true, silent = true })
 vim.keymap.set('i', '<BS>', [[pumvisible() ? "\<C-e><BS>" : "\<BS>"]], { expr = true, silent = true })
 vim.keymap.set(
-  "i",
-  "<CR>",
-  [[pumvisible() ? (complete_info().selected == -1 ? "\<C-e><CR>" : "\<C-y>") : "\<CR>"]],
-  { expr = true, silent = true }
+"i",
+"<CR>",
+[[pumvisible() ? (complete_info().selected == -1 ? "\<C-e><CR>" : "\<C-y>") : "\<CR>"]],
+{ expr = true, silent = true }
 )
- vim.keymap.set('i',
-  '<Tab>',
-  [[pumvisible() ? (complete_info().selected == -1 ? "\<C-n><C-y>" : "") : "\<Tab>"]],
-  { expr = true, silent = true }
+vim.keymap.set('i',
+'<Tab>',
+[[pumvisible() ? (complete_info().selected == -1 ? "\<C-n><C-y>" : "") : "\<Tab>"]],
+{ expr = true, silent = true }
 )
 
 vim.api.nvim_create_autocmd({"BufWritePre", "FocusLost"}, {
-    buffer = buffer,
-    callback = function()
-        vim.lsp.buf.format { async = false }
-    end
+  buffer = buffer,
+  callback = function()
+    vim.lsp.buf.format { async = false }
+  end
 })
