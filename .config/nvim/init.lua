@@ -32,7 +32,7 @@ vim.cmd [[packadd packer.nvim]]
 require('packer').startup({function(use)
   use 'wbthomason/packer.nvim'
   use {'neovim/nvim-lspconfig'}
-  use "windwp/nvim-autopairs" 
+  use "windwp/nvim-autopairs"
   use 'tpope/vim-abolish'
   use 'tpope/vim-fugitive'
   use { "catppuccin/nvim", as = "catppuccin" }
@@ -167,7 +167,7 @@ require('lualine').setup({
     lualine_c = {'filename'},
   },
 })
-require("fzf-lua").setup() 
+require("fzf-lua").setup()
 
 -------------------- OPTIONS -------------------------------
 cmd 'colorscheme catppuccin-latte'
@@ -192,7 +192,7 @@ opt.splitright = true               -- Put new windows right of current
 opt.tabstop = 2                     -- Number of spaces tabs count for
 opt.termguicolors = true            -- True color support
 opt.wildmode = {"list:longest","full"}  -- Command-line completion mode
-opt.wildmenu = true 
+opt.wildmenu = true
 opt.wildoptions = "pum"
 opt.wrap = false                    -- Disable line wrap
 opt.virtualedit = 'insert'
@@ -259,8 +259,8 @@ map('n', '<leader>?', ':FzfLua lgrep_curbuf resume=false<CR>')
 map('n', '<leader>ff', ':FzfLua quickfix<CR>')
 --chadtree
 local fileExplorerPrevWindow
-map('n', '<leader>fe', function() 
-  if vim.bo.buftype == "nofile" and fileExplorerPrevWindow ~= null then 
+map('n', '<leader>fe', function()
+  if vim.bo.buftype == "nofile" and fileExplorerPrevWindow ~= null then
     return ":lua vim.api.nvim_set_current_win("..fileExplorerPrevWindow..")<cr>"
   else
     fileExplorerPrevWindow = vim.api.nvim_get_current_win()
@@ -268,8 +268,8 @@ map('n', '<leader>fe', function()
   end
   return
 end, {expr = true, silent = true})
-map('n', '<leader>fe', function() 
-  if vim.bo.buftype == "nofile" and fileExplorerPrevWindow ~= null then 
+map('n', '<leader>fe', function()
+  if vim.bo.buftype == "nofile" and fileExplorerPrevWindow ~= null then
     return ":lua vim.api.nvim_set_current_win("..fileExplorerPrevWindow..")<cr>"
   else
     fileExplorerPrevWindow = vim.api.nvim_get_current_win()

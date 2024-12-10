@@ -1,16 +1,16 @@
 export ZSH=$HOME/.oh-my-zsh
 prod_zones="dca20 dca1 dca11 dca4 dca8 icn99 las99 phx2 phx3 phx4 phx5 phx99 ALL_ZONES"
-alias bhd="bazel run //src/code.uber.internal/infra/bhd/cmd/cli --"
-
 plugins=(git docker docker-compose zsh-z)
-#ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#9BC7FF"
 source $ZSH/oh-my-zsh.sh
 DISABLE_UPDATE_PROMPT=true
 
 export EDITOR=nvim
+if [[ "$TERM_PROGRAM" == "vscode" ]]; then
+  export EDITOR=code
+fi
 
 alias ssh="ssh -X"
-alias nv="nvim -n" 
+alias nv="nvim -n"
 alias rel="source ~/.zshrc"
 alias gs="git status ."
 alias gprom="git pull --rebase origin main"
@@ -27,13 +27,8 @@ alias grl="git reflog"
 alias nf='nv $(fzf)'
 alias tmux='TERM=tmux-256color tmux'
 alias histo='sort | uniq -c'
-TERM='tmux-256color'
 
-vtmc(){
-  cat ~/.vitemp | tmc
-}
 uuid(){
-
 id=$(od -x /dev/urandom | head -1 | awk '{OFS="-"; print $2$3,$4,$5,$6,$7$8$9}')
 echo $id
 echo $id | pbcopy
@@ -49,7 +44,6 @@ gdo(){
 d=${1:-1}
 top=$(git rev-parse --show-toplevel)
 files="$(git --no-pager diff HEAD~$d HEAD~$(($d-1)) --name-only | sed "s,^,$top/,")"
-
 exist_files=""
 echo $files | while read f; do
  if [[ -f "$f" || -d "$f" ]]; then
@@ -58,15 +52,14 @@ echo $files | while read f; do
     echo "$f doesn't exist"
   fi
 done
-
-eval "nv $exist_files" 
+eval "$EDITOR $exist_files"
 }
 
 gduo(){
   d=${1:-1}
   top=$(git rev-parse --show-toplevel)
   files="$(git --no-pager diff --diff-filter=U  --name-only | sed "s,^,$top/,")"
-  
+
   exist_files=""
   echo $files | while read f; do
    if [[ -f "$f" || -d "$f" ]]; then
@@ -76,24 +69,7 @@ gduo(){
     fi
   done
 
-  eval "nv $exist_files" 
-}
-
-gdou(){
-  d=${1:-1}
-  top=$(git rev-parse --show-toplevel)
-  files="$(git --no-pager diff --name-only | sed "s,^,$top/,")"
-  
-  exist_files=""
-  echo $files | while read f; do
-   if [[ -f "$f" || -d "$f" ]]; then
-      exist_files="$exist_files $f"
-    else
-      echo "$f doesn't exist"
-    fi
-  done
-
-  eval "nv $exist_files" 
+  eval "$EDITOR $exist_files"
 }
 
 unalias gco
@@ -107,11 +83,11 @@ sgp(){
 ~/go-code/bin/setup-gopath "//src/code.uber.internal/infra/$1/..."
 }
 vt(){
-usso -utoken utoken -aud usecret -print 2>/dev/null | jq -j .shp_utoken | vault write -format=json -namespace=$1 auth/utoken/login jwt=- | jq -j '.auth.client_token' | pbcopy 
+usso -utoken utoken -aud usecret -print 2>/dev/null | jq -j .shp_utoken | vault write -format=json -namespace=$1 auth/utoken/login jwt=- | jq -j '.auth.client_token' | pbcopy
 }
 cleartemp(){
 cd;
-rm -rf temp;
+om -rf temp;
 mkdir temp;
 cd temp;
 }
@@ -171,7 +147,7 @@ precmd() { vcs_info }
 
 # Format the vcs_info_msg_0_ variable
 zstyle ':vcs_info:git:*' formats '[%b]'
- 
+
 # Set up the prompt (with git branch name)
 setopt PROMPT_SUBST
 NEWLINE=$'\n'
