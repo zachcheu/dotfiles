@@ -2,3 +2,5 @@
 .config/JetBrains/*
 .config/configstore/*
 .config/go/*
+.config/karabiner/automatic_backups/*
+.config/.DS_STORE
