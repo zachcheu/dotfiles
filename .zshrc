@@ -12,12 +12,10 @@ fi
 alias ssh="ssh -X"
 alias nv="nvim -n"
 alias rel="source ~/.zshrc"
-alias gs="git status ."
-alias gprom="git pull --rebase origin main"
+alias gs="git status -uno ."
 alias gcaa="git commit -a --amend"
 alias gcam="git commit -am"
 alias gca="git add .; git commit -m $1"
-alias gcb="git checkout -b zach.cheung/$1"
 alias gcm="git commit -m"
 alias gr="git rebase"
 alias gre="git rebase --edit-todo"
@@ -27,6 +25,8 @@ alias grl="git reflog"
 alias nf='nv $(fzf)'
 alias tmux='TERM=tmux-256color tmux'
 alias histo='sort | uniq -c'
+alias ad='arc diff -a --amend-autofixes --noautoland'
+alias ada='arc diff -a --amend-autofixes --autoland'
 
 uuid(){
 id=$(od -x /dev/urandom | head -1 | awk '{OFS="-"; print $2$3,$4,$5,$6,$7$8$9}')
@@ -54,6 +54,15 @@ echo $files | while read f; do
 done
 eval "$EDITOR $exist_files"
 }
+gprom(){
+  main=$(git remote show origin | sed -n '/HEAD branch/s/.*: //p')
+  git pull --rebase origin "$main"
+}
+unalias gcb
+gcb(){
+  main=$(git remote show origin | sed -n '/HEAD branch/s/.*: //p')
+  git checkout -b "zach.cheung/$1" "$main"
+}
 
 gduo(){
   d=${1:-1}
@@ -77,6 +86,13 @@ gco(){
   branch=$(git branch --format "%(refname:short)" | fzf)
   git checkout $branch
 }
+
+unalias gbd
+gbd(){
+  branch=$(git branch --format "%(refname:short)" | fzf -m | tr '\n' ' ' | awk '{$1=$1;print}')
+  git branch -D $branch
+}
+
 
 alias gl="git log --pretty=oneline --abbrev-commit"
 sgp(){

@@ -45,6 +45,7 @@ require('packer').startup({function(use)
       require('colorful-winsep').setup()
     end
   }
+  use {'ojroques/vim-oscyank'}
   use {'echasnovski/mini.surround'}
   use {'nvim-focus/focus.nvim'}
   use {'nvim-treesitter/nvim-treesitter',run = ':TSUpdate'}
@@ -59,7 +60,6 @@ require('packer').startup({function(use)
       require('notifier').setup()
     end
   }
-  use {'gelguy/wilder.nvim'}
 end,
 config = {
   display = {
@@ -84,9 +84,6 @@ g['chadtree_settings'] = {
   },
 }
 require("coq")
-require("wilder").setup({
-  modes = {":", '/', '?'}
-})
 require("lsp_signature").setup({
   hint_enable = false,
   fix_pos = true,
@@ -129,6 +126,7 @@ require('nvim-treesitter.configs').setup({
   },
 })
 require("focus").setup()
+
 local ignore_buftypes = { 'nofile', 'prompt', 'popup' }
 local augroup = vim.api.nvim_create_augroup('FocusDisable', { clear = true })
 vim.api.nvim_create_autocmd({'WinEnter'}, {
@@ -161,13 +159,46 @@ vim.api.nvim_create_autocmd("VimEnter", {
 	end,
 })
 
+
+--vim.api.nvim_create_autocmd("FocusLost", {
+--	callback = function()
+--		vim.cmd(":Catppuccin latte")
+--	end,
+--})
+--vim.api.nvim_create_autocmd("FocusGained", {
+--	callback = function()
+--		vim.cmd(":Catppuccin latte")
+--	end,
+--})
+
+-- Might not work?
+function feedkeys(input)
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(input,true,false,true),'n',false)
+end
+
+vim.api.nvim_create_autocmd({'FileType'},{
+    pattern = 'qf',
+    callback = function(_)
+        opt.buflisted = false
+    end,
+})
+
 require('nvim-autopairs').setup{}
 require('lualine').setup({
   sections = {
     lualine_c = {'filename'},
   },
 })
-require("fzf-lua").setup()
+
+local actions = require("fzf-lua.actions")
+require("fzf-lua").setup({
+    grep = {
+        actions = {
+            ["ctrl-f"] = {actions.grep_lgrep},
+            ["ctrl-g"] = false,
+        },
+    },
+})
 
 -------------------- OPTIONS -------------------------------
 cmd 'colorscheme catppuccin-latte'
@@ -198,11 +229,11 @@ opt.wrap = false                    -- Disable line wrap
 opt.virtualedit = 'insert'
 opt.mouse = ""
 opt.mousescroll = "ver:0,hor:0"
+opt.winhighlight = "Normal:MyNormal"
 
 cmd 'autocmd FocusLost,BufLeave * :wa'
 -------------------- MAPPINGS ------------------------------
-map('n', '<leader>o', 'm`o<Esc>``')  -- Insert a newline in normal mode
-map('n', 'n', 'nzz')                 -- Better search centering
+map('n', 'n', 'nzz')                
 map('n', 'N', 'Nzz')
 map('n', '<C-j>', 'A<del><Esc>')
 map('n', '*', '*zz')
@@ -214,9 +245,8 @@ map('v', 'J', ":m '>+1<CR>==gv=gv")
 map('n', '<leader>d', '"_d')
 map('i', '<S-Tab>', '<C-d>')
 map('n', 'Y', 'y$')
-map('n', '<leader>/', ':%S/')
-map('n', '<leader>j', ':s/\\s*$//<cr>J')
 map('n', '<leader><leader>', ':nohl<CR>')
+map('v', '//', ':')
 
 -- Copy/Paste
 map('v', '<leader>y', '"+y')
@@ -226,6 +256,29 @@ map('n', '<leader>p', '"+p')
 map('n', '<leader>P', '"+P')
 map('v', '<leader>p', '"+p')
 map('v', '<leader>P', '"+P')
+
+-- quickfix
+function toggle_qf()
+  local qf_exists = false
+  for _, win in pairs(vim.fn.getwininfo()) do
+    if win["quickfix"] == 1 then
+      qf_exists = true
+    end
+  end
+  if qf_exists == true then
+    vim.cmd("cclose")
+    return
+  end
+  if not vim.tbl_isempty(vim.fn.getqflist()) then
+    vim.cmd("copen")
+  end
+end
+vim.keymap.set({'n','v'}, '<leader>ll', toggle_qf)
+
+vim.keymap.set({'n','v'}, '<leader>lo', ':cold<CR>')
+vim.keymap.set({'n','v'}, '<leader>li', ':cnew<CR>')
+vim.keymap.set({'n','v'}, '<leader>lk', ':cprev<CR>')
+vim.keymap.set({'n','v'}, '<leader>lj', ':cnext<CR>')
 
 -- Buffer/Window/Tab Management
 map("n", "<leader>wk", ":bprev<CR>", {noremap=false})
@@ -246,17 +299,24 @@ map("n", "<leader>wo", "<C-w><C-o>", {noremap=false})
 -- Config Management
 map("n", "<leader>co", ":e ~/.config/nvim/init.lua<CR>")
 
--- FzfLua
+-- fzflua
 map('n', '<leader>fb', ':FzfLua buffers<CR>')
 map('n', '<leader>fh', ':FzfLua oldfiles<CR>')
 map('n', '<leader>fo', ':lua require("fzf-lua").files({cwd=get_root(), git_icons=false, resume=true})<CR>')
 map('n', '<leader>fO', ':lua require("fzf-lua").files({cwd=get_root(), git_icons=false, resume=false})<CR>')
-map('n', '<leader>fg', ':lua require("fzf-lua").grep()<CR>')
-map('n', '<leader>f/', ':FzfLua live_grep resume=true<CR>')
-map('n', '<leader>f?', ':FzfLua live_grep resume=false<CR>')
-map('n', '<leader>/', ':FzfLua lgrep_curbuf resume=true<CR>')
-map('n', '<leader>?', ':FzfLua lgrep_curbuf resume=false<CR>')
+map('n', '<leader>fp', ':lua require("fzf-lua").files({cwd=get_repo(), git_icons=false, resume=true})<CR>')
+map('n', '<leader>fP', ':lua require("fzf-lua").files({cwd=get_repo(), git_icons=false, resume=false})<CR>')
+map('n', '<leader>f/', ':lua require("fzf-lua").live_grep_glob({cwd=get_root(), resume=true})<CR>')
+map('n', '<leader>f?', ':lua require("fzf-lua").live_grep_glob({cwd=get_root(), resume=false})<CR>')
+map('n', '<leader>/', ':lua require("fzf-lua").lgrep_curbuf({search=" ", resume=true})<CR>')
+map('n', '<leader>?', ':lua require("fzf-lua").lgrep_curbuf({search=" ", resume=false})<CR>')
 map('n', '<leader>ff', ':FzfLua quickfix<CR>')
+
+-- OSCYank
+vim.keymap.set('n', '<leader>c', '<Plug>OSCYankOperator')
+vim.keymap.set('n', '<leader>cc', '<leader>c_', {remap = true})
+vim.keymap.set('v', '<leader>c', '<Plug>OSCYankVisual')
+
 --chadtree
 local fileExplorerPrevWindow
 map('n', '<leader>fe', function()
@@ -268,18 +328,33 @@ map('n', '<leader>fe', function()
   end
   return
 end, {expr = true, silent = true})
-map('n', '<leader>fe', function()
-  if vim.bo.buftype == "nofile" and fileExplorerPrevWindow ~= null then
-    return ":lua vim.api.nvim_set_current_win("..fileExplorerPrevWindow..")<cr>"
-  else
-    fileExplorerPrevWindow = vim.api.nvim_get_current_win()
-    return ":CHADopen --always-focus<CR>"
-  end
-end, {expr = true, silent = true})
 map('n', '<leader>fq', ":CHADopen --nofocus<cr>", {silent = true})
 --fugitive
 map('n', '<leader>hs', ':Git difftool -y<CR>')
 map('n', '<leader>hh', ':tabfirst | :.tabonly<CR>')
+
+function fugitive_uber_sourcegraph(opts)
+    local repo = string.match(opts.remote, '[^%s]+:([^%s]+)')
+    repo = string.gsub(repo, '@', '-') -- e.g. grail@production
+    local mainUrl = 'https://sourcegraph.uberinternal.com/code.uber.internal/' .. repo .. '@' .. 'main' .. '/-/' .. opts.type .. '/' .. opts.path
+    local url = 'https://sourcegraph.uberinternal.com/code.uber.internal/' .. repo .. '@' .. opts.commit .. '/-/' .. opts.type .. '/' .. opts.path
+    if opts.line1 > 0 then
+        mainUrl = mainUrl .. '#L' .. opts.line1
+        url = url .. '#L' .. opts.line1
+    else
+        local lineNum = vim.api.nvim_win_get_cursor(0)[1]
+        mainUrl = mainUrl .. '#L' .. lineNum
+        url = url .. '#L' .. lineNum
+    end
+    if opts.line2 > 0 then
+        mainUrl = mainUrl .. '-' .. opts.line2
+        url = url .. '-' .. opts.line2
+    end
+    print(mainUrl)
+    return url
+end
+vim.g.fugitive_browse_handlers = {fugitive_uber_sourcegraph}
+vim.keymap.set({'n','v'}, '<leader>go', ":GBrowse!<cr>", {silent = true})
 
 function table_contains(table, element)
   for i,val in ipairs(table) do
@@ -308,6 +383,19 @@ function get_root()
   return root_dir
 end
 
+function get_repo()
+  local path = vim.api.nvim_buf_get_name(0)
+  if path == '' then return end
+  local root_dir = ""
+  for dir in vim.fs.parents(path) do
+    if vim.fn.isdirectory(dir .. "/.git") == 1 then
+      root_dir = dir
+      break
+    end
+  end
+  return root_dir
+end
+
 function center_wrap_callback(argfunc)
   return function()
     argfunc()
@@ -324,11 +412,15 @@ local on_attach = function(client, bufnr)
 
   -- Mappings.
   -- See `:help vim.lsp.*` for documentation on any of the below functions
+  local fzf = require('fzf-lua')
   vim.keymap.set('n', 'gd', center_wrap_callback(vim.lsp.buf.definition), opts)
   vim.keymap.set('n', 'gh', vim.lsp.buf.hover, opts)
   vim.keymap.set('n', 'ge', vim.lsp.buf.rename, opts)
   vim.keymap.set('n', '<space>ca', vim.lsp.buf.code_action, opts)
-  vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
+  vim.keymap.set('n', 'gr', fzf.lsp_references, opts)
+  vim.keymap.set('n', 'gi', fzf.lsp_implementations, opts)
+  vim.keymap.set('n', 'gD', fzf.lsp_declarations, opts)
+  vim.keymap.set('n', 'gt', fzf.lsp_typedefs, opts)
   local function quickfix()
       vim.lsp.buf.code_action({
           filter = function(a) return a.isPreferred end,
@@ -342,7 +434,7 @@ local on_attach = function(client, bufnr)
 end
 
 require('lspconfig').gopls.setup({
-  cmd = {'gopls', '-remote=auto'},
+  cmd = {'gopls', '-remote=auto', '-debug=localhost:6060'},
   on_attach = on_attach,
   flags = {
     -- Don't spam LSP with changes. Wait a second between each.
