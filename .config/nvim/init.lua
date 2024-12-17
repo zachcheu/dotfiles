@@ -47,7 +47,7 @@ require('packer').startup({function(use)
   }
   use {'ojroques/vim-oscyank'}
   use {'echasnovski/mini.surround'}
-  use {'nvim-focus/focus.nvim'}
+  --use {'nvim-focus/focus.nvim'}
   use {'nvim-treesitter/nvim-treesitter',run = ':TSUpdate'}
   use {"nvim-treesitter/nvim-treesitter-textobjects"}
   use {'ms-jpq/coq_nvim'}
@@ -125,39 +125,39 @@ require('nvim-treesitter.configs').setup({
     },
   },
 })
-require("focus").setup()
+--require("focus").setup()
 
-local ignore_buftypes = { 'nofile', 'prompt', 'popup' }
-local augroup = vim.api.nvim_create_augroup('FocusDisable', { clear = true })
-vim.api.nvim_create_autocmd({'WinEnter'}, {
-    group = augroup,
-    callback = function(_)
-        if vim.tbl_contains(ignore_buftypes, vim.bo.buftype)
-        then
-            vim.w.focus_disable = true
-        else
-            local before = vim.w.focus_disable
-            vim.w.focus_disable = false or vim.w.focus_disable
-        end
-    end,
-    desc = 'Disable focus autoresize for BufType',
-})
-vim.api.nvim_create_autocmd({'WinLeave'}, {
-    group = augroup,
-    callback = function(_)
-        if vim.tbl_contains(ignore_buftypes, vim.bo.buftype)
-        then
-            vim.w.focus_disable = true
-        end
-    end,
-    desc = 'Disable focus autoresize for BufType',
-})
-vim.api.nvim_create_autocmd("VimEnter", {
-	callback = function()
-    vim.w.focus_disable = true
-		vim.cmd(":CHADopen --nofocus")
-	end,
-})
+--local ignore_buftypes = { 'nofile', 'prompt', 'popup' }
+--local augroup = vim.api.nvim_create_augroup('FocusDisable', { clear = true })
+--vim.api.nvim_create_autocmd({'WinEnter'}, {
+--    group = augroup,
+--    callback = function(_)
+--        if vim.tbl_contains(ignore_buftypes, vim.bo.buftype)
+--        then
+--            vim.w.focus_disable = true
+--        else
+--            local before = vim.w.focus_disable
+--            vim.w.focus_disable = false or vim.w.focus_disable
+--        end
+--    end,
+--    desc = 'Disable focus autoresize for BufType',
+--})
+--vim.api.nvim_create_autocmd({'WinLeave'}, {
+--    group = augroup,
+--    callback = function(_)
+--        if vim.tbl_contains(ignore_buftypes, vim.bo.buftype)
+--        then
+--            vim.w.focus_disable = true
+--        end
+--    end,
+--    desc = 'Disable focus autoresize for BufType',
+--})
+--vim.api.nvim_create_autocmd("VimEnter", {
+--	callback = function()
+--    vim.w.focus_disable = true
+--		vim.cmd(":CHADopen --nofocus")
+--	end,
+--})
 
 
 --vim.api.nvim_create_autocmd("FocusLost", {
