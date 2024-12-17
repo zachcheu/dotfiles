@@ -54,6 +54,7 @@ echo $files | while read f; do
 done
 eval "$EDITOR $exist_files"
 }
+unalias gprom
 gprom(){
   main=$(git remote show origin | sed -n '/HEAD branch/s/.*: //p')
   git pull --rebase origin "$main"
