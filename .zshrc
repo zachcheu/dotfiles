@@ -25,8 +25,9 @@ alias grl="git reflog"
 alias nf='nv $(fzf)'
 alias tmux='TERM=tmux-256color tmux'
 alias histo='sort | uniq -c'
-alias ad='arc diff -a --amend-autofixes --noautoland'
-alias ada='arc diff -a --amend-autofixes --autoland'
+alias ad='arc diff -a --amend-all --apply-patches --amend-autofixes --noautoland --nointeractive HEAD^'
+alias ada='arc diff -a --amend-all --apply-patches --amend-autofixes --autoland --nointeractive HEAD^'
+alias ap="arc patch --nobranch --revision $1"
 
 uuid(){
 id=$(od -x /dev/urandom | head -1 | awk '{OFS="-"; print $2$3,$4,$5,$6,$7$8$9}')
@@ -54,7 +55,6 @@ echo $files | while read f; do
 done
 eval "$EDITOR $exist_files"
 }
-unalias gprom
 gprom(){
   main=$(git remote show origin | sed -n '/HEAD branch/s/.*: //p')
   git pull --rebase origin "$main"

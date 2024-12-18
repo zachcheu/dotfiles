@@ -186,7 +186,20 @@ vim.api.nvim_create_autocmd({'FileType'},{
 require('nvim-autopairs').setup{}
 require('lualine').setup({
   sections = {
-    lualine_c = {'filename'},
+    lualine_c = {
+      {
+        'filename',
+        path = 3,
+      },
+    },
+  },
+  inactive_sections = {
+    lualine_c = {
+      {
+        'filename',
+        path = 3,
+      },
+    },
   },
 })
 
@@ -330,7 +343,10 @@ map('n', '<leader>fe', function()
 end, {expr = true, silent = true})
 map('n', '<leader>fq', ":CHADopen --nofocus<cr>", {silent = true})
 --fugitive
-map('n', '<leader>hs', ':Git difftool -y<CR>')
+map('n', '<leader>hf', ':Git difftool -y %<CR>')
+map('n', '<leader>hF', ':Git difftool -y HEAD~1 %<CR>')
+map('n', '<leader>hd', ':Git difftool -y<CR>')
+map('n', '<leader>hD', ':Git difftool -y HEAD~1<CR>')
 map('n', '<leader>hh', ':tabfirst | :.tabonly<CR>')
 
 function fugitive_uber_sourcegraph(opts)
