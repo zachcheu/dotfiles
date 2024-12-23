@@ -9,10 +9,11 @@ if [[ "$TERM_PROGRAM" == "vscode" ]]; then
   export EDITOR=code
 fi
 
+alias his="hostissue"
 alias ssh="ssh -X"
 alias nv="nvim -n"
 alias rel="source ~/.zshrc"
-alias gs="git status -uno ."
+alias gs="git status ."
 alias gcaa="git commit -a --amend"
 alias gcam="git commit -am"
 alias gca="git add .; git commit -m $1"
@@ -25,8 +26,10 @@ alias grl="git reflog"
 alias nf='nv $(fzf)'
 alias tmux='TERM=tmux-256color tmux'
 alias histo='sort | uniq -c'
-alias ad='arc diff -a --amend-all --apply-patches --amend-autofixes --noautoland --nointeractive HEAD^'
-alias ada='arc diff -a --amend-all --apply-patches --amend-autofixes --autoland --nointeractive HEAD^'
+alias ad='arc diff -a --amend-all --apply-patches --amend-autofixes --noautoland HEAD^'
+alias adr='arc diff -a --amend-all --apply-patches --amend-autofixes --noautoland -m "rebase" HEAD^'
+alias ada='arc diff -a --amend-all --apply-patches --amend-autofixes --autoland HEAD^'
+alias adar='arc diff -a --amend-all --apply-patches --amend-autofixes --autoland -m "rebase" HEAD^'
 alias ap="arc patch --nobranch --revision $1"
 
 uuid(){
