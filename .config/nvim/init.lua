@@ -210,6 +210,14 @@ require("fzf-lua").setup({
             ["ctrl-f"] = {actions.grep_lgrep},
             ["ctrl-g"] = false,
         },
+        rg_glob = true,
+    },
+    winopts = {
+        height = 0.95,
+        width = 0.85,
+        preview = {
+            layout = 'vertical',
+        },
     },
 })
 
@@ -248,7 +256,7 @@ cmd 'autocmd FocusLost,BufLeave * :wa'
 -------------------- MAPPINGS ------------------------------
 map('n', 'n', 'nzz')                
 map('n', 'N', 'Nzz')
-map('n', '<C-j>', 'A<del><Esc>')
+map('n', '<C-f>', 'A<del><Esc>')
 map('n', '*', '*zz')
 map('n', '#', '#zz')
 map('n', 'K', ':m .-2<CR>==')
@@ -306,6 +314,7 @@ map("n", "<leader>w<up>", "<C-w>k", {noremap=false})
 map("n", "<leader>w<right>", "<C-w>l", {noremap=false})
 map("n", "<leader>wV", "<C-w>s", {noremap=false})
 map("n", "<leader>wv", "<C-w>v", {noremap=false})
+map("n", "<leader>wa", "<C-w>w", {noremap=false})
 map("n", "<leader>ww", "<C-w>c", {noremap=false})
 map("n", "<leader>wo", "<C-w><C-o>", {noremap=false})
 
@@ -321,8 +330,8 @@ map('n', '<leader>fP', ':lua require("fzf-lua").files({cwd=get_repo(), git_icons
 map('n', '<leader>fp', ':lua require("fzf-lua").files({cwd=get_repo(), git_icons=false, resume=false})<CR>')
 map('n', '<leader>fG', ':lua require("fzf-lua").live_grep_glob({cwd=get_root(), resume=true})<CR>')
 map('n', '<leader>fg', ':lua require("fzf-lua").live_grep_glob({cwd=get_root(), resume=false})<CR>')
-map('n', '<leader>?', ':lua require("fzf-lua").lgrep_curbuf({search=" ", resume=true})<CR>')
-map('n', '<leader>/', ':lua require("fzf-lua").lgrep_curbuf({search=" ", resume=false})<CR>')
+map('n', '<leader>fn', ':lua require("fzf-lua").lgrep_curbuf({search="", resume=true, })<CR>')
+map('n', '<leader>fm', ':lua require("fzf-lua").lgrep_curbuf({search="", resume=false, rg_glob=true})<CR>')
 map('n', '<leader>ff', ':FzfLua quickfix<CR>')
 
 -- OSCYank
@@ -466,17 +475,9 @@ vim.g.coq_settings = {
 vim.keymap.set('i', '<Esc>', [[pumvisible() ? "\<C-e><Esc>" : "\<Esc>"]], { expr = true, silent = true })
 vim.keymap.set('i', '<C-c>', [[pumvisible() ? "\<C-e><C-c>" : "\<C-c>"]], { expr = true, silent = true })
 vim.keymap.set('i', '<BS>', [[pumvisible() ? "\<C-e><BS>" : "\<BS>"]], { expr = true, silent = true })
-vim.keymap.set(
-"i",
-"<CR>",
-[[pumvisible() ? (complete_info().selected == -1 ? "\<C-e><CR>" : "\<C-y>") : "\<CR>"]],
-{ expr = true, silent = true }
-)
-vim.keymap.set('i',
-'<Tab>',
-[[pumvisible() ? (complete_info().selected == -1 ? "\<C-n><C-y>" : "") : "\<Tab>"]],
-{ expr = true, silent = true }
-)
+vim.keymap.set("i","<CR>",[[pumvisible() ? (complete_info().selected == -1 ? "\<C-n><C-y>" : "\<C-y>") : "\<CR>"]],{ expr = true, silent = true })
+vim.keymap.set('i','<Down>',[[pumvisible() ? (complete_info().selected == -1 ? "\<C-n>" : "\<C-n>") : "\<Down>"]],{ expr = true, silent = true }) 
+vim.keymap.set('i','<Up>',[[pumvisible() ? (complete_info().selected == -1 ? "\<C-p>" : "\<C-p>") : "\<Down>"]],{ expr = true, silent = true })
 
 vim.api.nvim_create_autocmd({"BufWritePre", "FocusLost"}, {
   buffer = buffer,
