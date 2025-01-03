@@ -149,6 +149,7 @@ bindkey "^[[A" history-beginning-search-backward
 bindkey "^[[B" history-beginning-search-forward
 bindkey '^R' history-incremental-search-backward
 export FZF_DEFAULT_COMMAND='rg --files --no-ignore-vcs --hidden'
+export FZF_DEFAULT_OPTS='--multi --no-height --extended'
 
 HISTTIMEFORMAT="%d/%m/%y %T "
 HISTTIMEFORMAT="%F %T "
