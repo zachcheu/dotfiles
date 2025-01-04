@@ -130,6 +130,26 @@
                                     }
                                 ],
                                 "from": {
+                                    "key_code": "c",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "c",
+                                        "modifiers": ["left_control"]
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_lock pressed",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
                                     "key_code": "g",
                                     "modifiers": { "optional": ["any"] }
                                 },
